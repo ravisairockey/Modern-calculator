@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modern Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      overflow: hidden;
+      background: #0f2027;
+      color: #fff;
+    }
+
+    #clock {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.1);
+      padding: 10px 15px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .calculator {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      width: 90%;
+      max-width: 400px;
+      transition: transform 0.3s ease;
+    }
+
+    .calculator:hover {
+      transform: scale(1.02);
+    }
+
+    .display {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      border-radius: 15px;
+      font-size: 2rem;
+      text-align: right;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+
+    .button {
+      padding: 20px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .button:hover {
+      background: rgba(255,255,255,0.2);
+      transform: scale(1.05);
+    }
+
+    .equal {
+      grid-column: span 2;
+      background: #1abc9c;
+      color: #fff;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+
+    @media (max-width: 500px) {
+      .calculator {
+        padding: 20px;
+      }
+      .button {
+        padding: 15px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="clock"></div>
+
+  <canvas id="bg"></canvas>
+
+  <div class="container">
+    <div class="calculator">
+      <div class="display" id="display">0</div>
+      <div class="buttons">
+        <button class="button" onclick="clearDisplay()">C</button>
+        <button class="button" onclick="inputValue('/')">÷</button>
+        <button class="button" onclick="inputValue('*')">×</button>
+        <button class="button" onclick="deleteLast()">⌫</button>
+
+        <button class="button" onclick="inputValue('7')">7</button>
+        <button class="button" onclick="inputValue('8')">8</button>
+        <button class="button" onclick="inputValue('9')">9</button>
+        <button class="button" onclick="inputValue('-')">-</button>
+
+        <button class="button" onclick="inputValue('4')">4</button>
+        <button class="button" onclick="inputValue('5')">5</button>
+        <button class="button" onclick="inputValue('6')">6</button>
+        <button class="button" onclick="inputValue('+')">+</button>
+
+        <button class="button" onclick="inputValue('1')">1</button>
+        <button class="button" onclick="inputValue('2')">2</button>
+        <button class="button" onclick="inputValue('3')">3</button>
+        <button class="button" onclick="inputValue('.')">.</button>
+
+        <button class="button" onclick="inputValue('0')">0</button>
+        <button class="button equal" onclick="calculate()">=</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script>
+    // CLOCK
+    function updateClock() {
+      const clock = document.getElementById('clock');
+      const now = new Date();
+      clock.innerText = now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // CALCULATOR
+    let currentInput = '';
+
+    function inputValue(val) {
+      if (currentInput === '0' && val !== '.') {
+        currentInput = '';
+      }
+      currentInput += val;
+      updateDisplay();
+    }
+
+    function clearDisplay() {
+      currentInput = '';
+      updateDisplay();
+    }
+
+    function deleteLast() {
+      currentInput = currentInput.slice(0, -1);
+      updateDisplay();
+    }
+
+    function calculate() {
+      try {
+        currentInput = eval(currentInput).toString();
+      } catch {
+        currentInput = 'Error';
+      }
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      document.getElementById('display').innerText = currentInput || '0';
+    }
+
+    // THREE.JS BACKGROUND
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#bg'), alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const geometry = new THREE.SphereGeometry(0.2, 32, 32);
+    const material = new THREE.MeshStandardMaterial({ color: 0x1abc9c });
+    const lights = [];
+
+    for (let i = 0; i < 60; i++) {
+      const sphere = new THREE.Mesh(geometry, material);
+      sphere.position.x = (Math.random() - 0.5) * 10;
+      sphere.position.y = (Math.random() - 0.5) * 10;
+      sphere.position.z = (Math.random() - 0.5) * 10;
+      scene.add(sphere);
+      lights.push(sphere);
+    }
+
+    const light = new THREE.PointLight(0xffffff, 1);
+    light.position.set(0, 0, 5);
+    scene.add(light);
+
+    camera.position.z = 5;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      lights.forEach(s => {
+        s.rotation.x += 0.01;
+        s.rotation.y += 0.01;
+      });
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
